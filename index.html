@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday Chibi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- UI Elements --- */
+        #skip-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            z-index: 9999;
+            padding: 8px 12px;
+            border-radius: 50%;
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #000;
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden { 
+            display: none !important; 
+            opacity: 0; 
+            pointer-events: none;
+        }
+
+        /* --- Media Styling --- */
+        img {
+            max-width: 90%;
+            max-height: 50vh;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+            margin-bottom: 20px;
+            object-fit: contain;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 60vh;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        /* --- Typography --- */
+        .text-box {
+            font-size: 1.1rem;
+            min-height: 60px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            width: 90%;
+            max-width: 600px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .yellow-text { color: #ffd700; font-size: 0.9em; display: block; margin-top: 5px; }
+
+        /* --- Buttons --- */
+        .btn {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            background: #ff4081;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 64, 129, 0.4);
+        }
+        .btn:active { transform: scale(0.95); }
+        .red-btn { background: #ff0000; box-shadow: 0 0 20px red; font-weight: bold; }
+        
+        .option-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 10px auto;
+            background: #222;
+            border: 1px solid #444;
+            box-shadow: none;
+        }
+
+        /* --- Confetti --- */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 50;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+        /* --- Scroll Letter --- */
+        .scroll-container {
+            height: 70vh;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+        .scrolling-text {
+            position: absolute;
+            bottom: -150%;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #eee;
+        }
+
+        /* --- Age Stats --- */
+        .age-list { text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; }
+        .age-list p { margin: 8px 0; border-bottom: 1px solid #444; padding-bottom: 4px; }
+
+    </style>
+</head>
+<body>
+
+    <button id="skip-btn" onclick="handleSkip()">▶️</button>
+
+    <div id="s1" class="container">
+        <h1>Tap anywhere to start</h1>
+    </div>
+
+    <div id="s2" class="container hidden">
+        <button class="btn red-btn" onclick="startSequence()">DON'T PRESS HERE</button>
+    </div>
+
+    <div id="s-media" class="container hidden">
+        <video id="uni-video" playsinline class="hidden"></video>
+        <img id="uni-image" class="hidden">
+        <div id="uni-text" class="text-box"></div>
+    </div>
+
+    <div id="s-countdown" class="container hidden">
+        <h1 style="font-size: 6rem; color: #ff4081;" id="timer">10</h1>
+    </div>
+
+    <div id="s-choice" class="container hidden">
+        <img src="question_cat.jpg">
+        <div class="text-box" id="choice-text"></div>
+        <div id="choice-buttons" class="hidden">
+            <button class="btn" onclick="handleYesNo('yes')">Yes</button>
+            <button class="btn" onclick="handleYesNo('no')">No</button>
+        </div>
+    </div>
+
+    <div id="s-quiz" class="container hidden">
+        <img id="quiz-img" src="">
+        <div class="text-box" id="quiz-question"></div>
+        <div id="quiz-options" style="width: 100%;"></div>
+    </div>
+
+    <div id="s-giftbox" class="container hidden">
+        <img id="gb-cat" src="final_cat.jpg" class="hidden">
+        <div class="text-box" id="gb-text"></div>
+        <div id="gb-area" style="width: 100%; height: 40vh; position: relative;"></div>
+    </div>
+
+    <div id="s-reveal" class="container hidden">
+        <img id="rev-img" src="">
+        <div id="rev-buttons"></div>
+    </div>
+
+    <div id="s-gifts" class="container hidden">
+        <video id="gift-video" playsinline class="hidden"></video>
+        <img id="gift-img" class="hidden">
+        <div class="text-box" id="gift-text"></div>
+        <button id="bonus-btn" class="btn hidden" onclick="playBonus()">Unlock Bonus</button>
+    </div>
+
+    <div id="s-age" class="container hidden">
+        <img src="final_cat.jpg">
+        <div class="text-box">let's calculate ur age</div>
+        <button class="btn" onclick="doAgeCalc()">Calculate</button>
+        <div id="age-res" class="age-list hidden"></div>
+        <div class="text-box" id="age-comment"></div>
+    </div>
+
+    <div id="s-letter" class="container hidden">
+        <div class="scroll-container">
+            <div id="letter-text" class="scrolling-text"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG & STATE ---
+        const audioFiles = [
+            'siren.mp3', 'punch.mp3', 'popup.mp3', 'xp_startup.mp3', 'victory.mp3', 
+            'hbd.mp3', 'choose.mp3', 'horror.mp3', 'bgm.mp3', 'kbc.mp3', 'lock.mp3', 
+            'cheer.mp3', 'nemesis.mp3', 'sorry.mp3', 'voice_note.wav'
+        ];
+        
+        let state = {
+            points: 0,
+            step: 0,
+            giftClicks: 0,
+            finalTier: 0
+        };
+
+        // GLOBAL TIMERS (To fix the looping issue)
+        let globalInterval = null;
+        let globalTimeout = null;
+        let typeTimeout = null;
+
+        const audios = {}; 
+
+        // --- CORE FUNCTIONS ---
+
+        window.onload = () => {
+            audioFiles.forEach(file => {
+                const id = file.split('.')[0];
+                const a = new Audio(file);
+                if(id === 'bgm') a.loop = true;
+                audios[id] = a;
+            });
+            
+            document.getElementById('s1').onclick = () => {
+                switchScene('s2');
+                playAud('siren');
+            };
+        };
+
+        function playAud(id, vol=1) {
+            try {
+                if(audios[id]) {
+                    audios[id].currentTime = 0;
+                    audios[id].volume = vol;
+                    audios[id].play().catch(e => console.log("Interaction needed"));
+                }
+            } catch(e) { console.error("Audio error", e); }
+        }
+
+        function stopAud(id) {
+            if(audios[id]) { audios[id].pause(); audios[id].currentTime = 0; }
+        }
+
+        // KEY FIX: Clears all running timers when switching scenes
+        function clearAllTimers() {
+            clearInterval(globalInterval);
+            clearTimeout(globalTimeout);
+            clearTimeout(typeTimeout);
+            // Reset video listeners to prevent zombie triggers
+            const vids = document.querySelectorAll('video');
+            vids.forEach(v => { v.onended = null; v.pause(); });
+        }
+
+        function switchScene(id) {
+            clearAllTimers(); // STOP EVERYTHING BEFORE MOVING
+            document.querySelectorAll('.container').forEach(d => d.classList.add('hidden'));
+            const el = document.getElementById(id);
+            if(el) {
+                el.classList.remove('hidden');
+                // Auto-update step for skip logic
+                if(id === 's2') state.step = 1;
+                if(id === 's-countdown') state.step = 3;
+            }
+        }
+
+        function typeWrite(elementId, text, speed = 40, callback) {
+            const el = document.getElementById(elementId);
+            if(!el) return;
+            el.innerHTML = "";
+            clearTimeout(typeTimeout); // Stop previous typing
+            
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    if(text.charAt(i) === '<') {
+                        let tag = "";
+                        while(text.charAt(i) !== '>' && i < text.length) { tag += text.charAt(i); i++; }
+                        tag += '>';
+                        el.innerHTML += tag;
+                    } else {
+                        el.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    typeTimeout = setTimeout(type, speed);
+                } else {
+                    if(callback) callback();
+                }
+            }
+            type();
+        }
+
+        // --- SEQUENCE LOGIC ---
+
+        function startSequence() {
+            stopAud('siren');
+            switchScene('s-media');
+            state.step = 2;
+            
+            const vid = document.getElementById('uni-video');
+            const img = document.getElementById('uni-image');
+            
+            vid.classList.remove('hidden');
+            img.classList.add('hidden');
+            vid.src = "rotate.mp4";
+            vid.play();
+            
+            vid.onended = () => {
+                vid.src = "punch.mp4";
+                playAud('punch');
+                vid.play();
+                
+                vid.onended = () => {
+                    vid.classList.add('hidden');
+                    img.classList.remove('hidden');
+                    img.src = "new_sticker.png";
+                    playAud('popup');
+                    typeWrite('uni-text', "why r u here babes ?? 🤨");
+
+                    globalTimeout = setTimeout(() => {
+                        img.src = "thinking_cat.png";
+                        playAud('popup');
+                        typeWrite('uni-text', "lemme guess the reason 🤔");
+                        
+                        globalTimeout = setTimeout(() => {
+                            img.src = "cool_cat.png";
+                            playAud('xp_startup');
+                            typeWrite('uni-text', "ohh yaahhh I remember it's ur birthday 😁🥳\n\nlet's start the countdown", 50, () => {
+                                globalTimeout = setTimeout(startCountdown, 1500);
+                            });
+                        }, 2500);
+                    }, 2500);
+                }
+            }
+        }
+
+        function startCountdown() {
+            switchScene('s-countdown'); // This calls clearAllTimers(), so no overlap
+            let t = 10;
+            const el = document.getElementById('timer');
+            el.innerText = t;
+            
+            globalInterval = setInterval(() => {
+                t--;
+                el.innerText = t;
+                if(t <= 0) {
+                    clearInterval(globalInterval);
+                    celebration();
+                }
+            }, 1000);
+        }
+
+        function celebration() {
+            // Confetti
+            for(let i=0; i<30; i++) {
+                let c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random()*100+'vw';
+                c.style.animationDuration = (2+Math.random()*3)+'s';
+                c.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`;
+                document.body.appendChild(c);
+            }
+            
+            switchScene('s-media');
+            const img = document.getElementById('uni-image');
+            img.classList.remove('hidden');
+            document.getElementById('uni-video').classList.add('hidden');
+            
+            img.src = "happy_birthday_cat.png";
+            playAud('hbd');
+            document.getElementById('uni-text').innerText = "";
+            
+            audios['hbd'].onended = () => {
+                askChoice();
+            };
+        }
+
+        function askChoice() {
+            switchScene('s-choice');
+            state.step = 4;
+            playAud('choose');
+            document.getElementById('choice-buttons').classList.add('hidden');
+            typeWrite('choice-text', "do u want ur gift?? 🙃", 50, () => {
+                document.getElementById('choice-buttons').classList.remove('hidden');
+            });
+        }
+
+        function handleYesNo(ans) {
+            if(ans === 'no') {
+                document.body.style.backgroundColor = 'black'; 
+                switchScene('s-media');
+                document.getElementById('uni-image').src = 'horror_img.jpg';
+                playAud('horror');
+                typeWrite('uni-text', "so u don't want to live more ... \nU want to get killed ... ??? \n- u ungrateful potato 🙂");
+                globalTimeout = setTimeout(() => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn';
+                    btn.innerText = "Go Back";
+                    btn.onclick = askChoice;
+                    document.getElementById('uni-text').appendChild(btn);
+                }, 4000);
+            } else {
+                startQuizPre();
+            }
+        }
+
+        function startQuizPre() {
+            switchScene('s-media');
+            document.getElementById('uni-image').src = 'my_girl.jpg';
+            playAud('bgm', 0.05); 
+            typeWrite('uni-text', "Ohk babes so I'm gonna ask u 3 questions n according to the answers u gave ... U will recieve the gift ..", 40, () => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = "Ohk I'm ready";
+                btn.onclick = startKBC;
+                document.getElementById('uni-text').appendChild(btn);
+            });
+        }
+
+        const questions = [
+            {
+                img: 'q1_cat.jpg', q: "Q1) who m i ???",
+                opts: ['nobody', 'the person whom I hate the most', 'a very special person', 'the person who lives in my heart'],
+                pts: [0, 10, 20, 30]
+            },
+            {
+                img: 'q2_cat.jpg', q: "at what topic our Convo was started",
+                opts: ['potato', 'charge', 'proposal', 'low battery'],
+                pts: [0, 10, 20, 30]
+            },
+            {
+                img: 'q3_cat.jpg', q: "what do u value more in a person <br><span class='yellow-text'>(Tell me in chat)</span>",
+                opts: ['honesty, even if it hurts u', 'consistency n efforts', 'peace of mind', 'emotional understanding n support'],
+                pts: [0, 10, 20, 30]
+            }
+        ];
+        let qIdx = 0;
+
+        function startKBC() {
+            state.step = 5;
+            qIdx = 0;
+            state.points = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if(qIdx >= questions.length) {
+                endQuiz();
+                return;
+            }
+            switchScene('s-quiz');
+            const q = questions[qIdx];
+            document.getElementById('quiz-img').src = q.img;
+            playAud('kbc');
+            document.getElementById('quiz-options').innerHTML = '';
+            
+            typeWrite('quiz-question', q.q, 40, () => {
+                q.opts.forEach((opt, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn option-btn';
+                    btn.innerHTML = opt;
+                    btn.onclick = () => {
+                        state.points += q.pts[i];
+                        playAud('lock');
+                        globalTimeout = setTimeout(nextQTransition, 1500);
+                    };
+                    document.getElementById('quiz-options').appendChild(btn);
+                });
+            });
+        }
+
+        function nextQTransition() {
+            document.getElementById('s-quiz').classList.add('hidden');
+            globalTimeout = setTimeout(() => {
+                if(qIdx < questions.length - 1) {
+                    qIdx++;
+                    switchScene('s-media');
+                    document.getElementById('uni-image').classList.add('hidden');
+                    document.getElementById('uni-text').innerText = (qIdx===1) ? "let's move to the second question" : "let's move to the third question";
+                    globalTimeout = setTimeout(showQuestion, 2000);
+                } else {
+                    qIdx++;
+                    showQuestion(); 
+                }
+            }, 1000);
+        }
+
+        function endQuiz() {
+            document.querySelectorAll('.container').forEach(d => d.classList.add('hidden'));
+            globalTimeout = setTimeout(() => {
+                switchScene('s-giftbox');
+                state.step = 6;
+                document.getElementById('gb-cat').classList.remove('hidden');
+                document.getElementById('gb-area').innerHTML = "";
+                typeWrite('gb-text', "ohh Yahh it's done now go n claim ur gift babes...", 50, spawnNormalBox);
+            }, 900);
+        }
+
+        function spawnNormalBox() {
+            const box = document.createElement('div');
+            box.innerText = "🎁";
+            box.style.fontSize = "60px";
+            box.style.cursor = "pointer";
+            box.style.position = "absolute";
+            box.style.left = "45%";
+            box.style.top = "40%";
+            box.onclick = () => {
+                playAud('laugh-vid'); 
+                switchScene('s-media');
+                const vid = document.getElementById('uni-video');
+                vid.classList.remove('hidden');
+                document.getElementById('uni-image').classList.add('hidden');
+                vid.src = "laugh.mp4";
+                vid.play();
+                
+                vid.onplay = () => {
+                     const overlay = document.createElement('img');
+                     overlay.src = 'image_0.png';
+                     overlay.style.position = 'absolute';
+                     overlay.style.width = '150px';
+                     overlay.style.top = '50%';
+                     overlay.style.left = '50%';
+                     overlay.style.transform = 'translate(-50%, -50%)';
+                     overlay.id = "troll-img";
+                     document.getElementById('s-media').appendChild(overlay);
+                };
+
+                typeWrite('uni-text', "u bot 😂😂 , u can't even open a gift box");
+                globalTimeout = setTimeout(() => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn';
+                    btn.innerText = "try again";
+                    btn.onclick = startTrollBox;
+                    document.getElementById('uni-text').appendChild(btn);
+                    const ov = document.getElementById('troll-img');
+                    if(ov) ov.remove();
+                }, 2000);
+            };
+            document.getElementById('gb-area').appendChild(box);
+        }
+
+        function startTrollBox() {
+            switchScene('s-giftbox');
+            document.getElementById('gb-cat').classList.add('hidden');
+            document.getElementById('gb-text').innerText = "";
+            document.getElementById('gb-area').innerHTML = "";
+            state.giftClicks = 0;
+
+            const box = document.createElement('div');
+            box.innerText = "🎁";
+            box.style.fontSize = "60px";
+            box.style.cursor = "pointer";
+            box.style.position = "absolute";
+            box.style.transition = "top 0.1s, left 0.1s";
+            
+            const moveBox = () => {
+                box.style.left = Math.random() * 80 + "%";
+                box.style.top = Math.random() * 80 + "%";
+            };
+            moveBox();
+
+            box.onclick = () => {
+                state.giftClicks++;
+                if(state.giftClicks < 9) {
+                    moveBox();
+                } else {
+                    switchScene('s-media');
+                    const vid = document.getElementById('uni-video');
+                    vid.src = 'bears.mp4';
+                    vid.classList.remove('hidden');
+                    document.getElementById('uni-image').classList.add('hidden');
+                    playAud('cheer');
+                    vid.play();
+                    typeWrite('uni-text', "Congo babes u finally did it", 40, () => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn';
+                        btn.innerText = "Reveal ur gift";
+                        btn.onclick = revealPrank;
+                        document.getElementById('uni-text').appendChild(btn);
+                    });
+                }
+            };
+            document.getElementById('gb-area').appendChild(box);
+        }
+
+        function revealPrank() {
+            switchScene('s-reveal');
+            const img = document.getElementById('rev-img');
+            const cont = document.getElementById('rev-buttons');
+            cont.innerHTML = "";
+            img.src = "brain.jpg";
+            playAud('nemesis');
+            
+            globalTimeout = setTimeout(() => {
+                img.src = "sorry_cat.jpg";
+                playAud('sorry');
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = "reveal ur real gift";
+                btn.onclick = calculateGifts;
+                cont.appendChild(btn);
+            }, 1800);
+        }
+
+        function calculateGifts() {
+            let tier = 1;
+            if(state.points >= 54) tier = 3; 
+            else if(state.points >= 27) tier = 2; 
+            
+            state.finalTier = tier;
+            playGiftA();
+        }
+
+        function playGiftA() {
+            switchScene('s-gifts');
+            state.step = 8;
+            const vid = document.getElementById('gift-video');
+            const img = document.getElementById('gift-img');
+            
+            vid.classList.add('hidden');
+            img.classList.remove('hidden');
+            img.src = "flower_cat.jpg";
+            vid.style.display = 'none'; 
+            vid.src = "flower.mp4";
+            vid.play(); 
+            
+            globalTimeout = setTimeout(() => {
+                img.classList.add('hidden');
+                typeWrite('gift-text', "where r u going cutie party isn't over yet .. here's something more", 50, () => {
+                     vid.style.display = 'block';
+                     vid.classList.remove('hidden');
+                     vid.src = "bonus.mp4";
+                     vid.play();
+                     vid.onended = () => {
+                         if(state.finalTier >= 2) unlockBonusScreen();
+                         else afterParty();
+                     }
+                });
+            }, 3000);
+        }
+
+        function unlockBonusScreen() {
+            switchScene('s-gifts');
+            document.getElementById('gift-video').classList.add('hidden');
+            document.getElementById('gift-img').classList.add('hidden');
+            document.getElementById('gift-text').innerHTML = "";
+            
+            const btn = document.getElementById('bonus-btn');
+            btn.classList.remove('hidden');
+            btn.innerText = "Unlock Bonus";
+        }
+
+        function playBonus() {
+            const btn = document.getElementById('bonus-btn');
+            btn.classList.add('hidden');
+            const vid = document.getElementById('gift-video');
+            vid.classList.remove('hidden');
+            vid.src = "found_her.mp4";
+            vid.play();
+            vid.onended = () => {
+                if(state.finalTier >= 3) playExtraBonus();
+                else afterParty();
+            };
+        }
+
+        function playExtraBonus() {
+            const vid = document.getElementById('gift-video');
+            vid.classList.add('hidden');
+            
+            typeWrite('gift-text', "Oh really? I can’t believe it… was what I saw actually real? 😱😱\nDid that sweet face really light up with a smile because of me?\nAhhh, what an adorable smile…\nCome on, let’s make that smile even bigger.");
+            
+            globalTimeout = setTimeout(() => {
+                document.getElementById('gift-text').innerHTML = "";
+                vid.classList.remove('hidden');
+                vid.src = "super_bonus.mp4";
+                vid.play();
+                vid.onended = afterParty;
+            }, 5000);
+        }
+
+        function afterParty() {
+            switchScene('s-age');
+            state.step = 9;
+        }
+
+        function doAgeCalc() {
+            const dob = new Date("2006-02-02T05:05:00");
+            const now = new Date();
+            const diff = now - dob;
+            
+            const seconds = Math.floor(diff/1000);
+            const minutes = Math.floor(seconds/60);
+            const hours = Math.floor(minutes / 60); // Correction: Minutes to hours
+            const days = Math.floor(hours / 24); // Correction: Hours to days (logic was slightly off in display) but pure math:
+            
+            // Recalculate precisely for display
+            const d_years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+            const d_months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30.44));
+            const d_weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
+            const d_days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const d_hours = Math.floor(diff / (1000 * 60 * 60));
+            const d_minutes = Math.floor(diff / (1000 * 60));
+            
+            const list = document.getElementById('age-res');
+            list.classList.remove('hidden');
+            list.innerHTML = `
+                <p>u r ${d_years} yrs old</p>
+                <p>u r ${d_months} months old</p>
+                <p>u r ${d_weeks} weeks old</p>
+                <p>u r ${d_days} days old</p>
+                <p>u r ${d_hours} hours old</p>
+                <p>u r ${d_minutes} mins old</p>
+                <p>u r ${seconds} seconds old</p>
+            `;
+            
+            typeWrite('age-comment', "u r literally way too old .. u r a granny .. 😆😆 \nI guess ur childhood pic would be a mural painting 🤧", 40, () => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = "Next";
+                btn.onclick = startLetter;
+                document.getElementById('age-comment').appendChild(btn);
+            });
+        }
+
+        function startLetter() {
+            switchScene('s-letter');
+            state.step = 10;
+            playAud('voice_note');
+            
+            const txt = `And yes, my voice isn’t very good, and my English isn’t that good either. Actually, I’m not that good in general.
+But I thought wishing you through a voice note would feel better.
+And if you don’t like my voice, you can just read the text instead.
+Happy Birthday, Chibi!
+Okay, let’s be real for a second…
+you officially know way too many of my secrets now.
+Honestly, I should probably be extra nice to you today,
+just to keep you quiet.
+But seriously… looking at you,
+I realise that yeah, we are getting old —
+but at least we’re doing this whole growing up thing together.
+You’re not just a year older today,
+you’re a year closer to becoming that crazy person
+who yells at kids to get off the lawn.
+I honestly don’t know how to put a label on what we have —
+whether it’s friendship
+or something totally different.
+But one thing I know for sure…
+you are my comfort zone.
+Life is just better, crazier,
+and a lot more fun when you’re around.
+I hope your day is overloaded with cake,
+filled with bad decisions
+that we’ll laugh about later,
+and has absolutely zero regrets.
+Let’s make this year even more legendary than the last one.
+Cheers to you, Chibi —
+for being the wildest
+and the most special person I know....`;
+            
+            const el = document.getElementById('letter-text');
+            el.innerText = txt;
+            el.style.animation = "scrollUp 60s linear forwards";
+            
+            const style = document.createElement('style');
+            style.innerHTML = `@keyframes scrollUp { from { bottom: -150%; } to { bottom: 100%; } }`;
+            document.head.appendChild(style);
+            
+            audios['voice_note'].onended = () => {
+                document.body.innerHTML = "<h1 style='color:white'>THE END</h1>";
+                setTimeout(() => { document.body.innerHTML = ""; document.body.style.background = "black"; }, 3000);
+            };
+        }
+
+        function handleSkip() {
+            stopAud('bgm'); 
+            
+            if(state.step < 2) startSequence();
+            else if(state.step == 2) startCountdown();
+            else if(state.step == 3) celebration();
+            else if(state.step < 5) startKBC();
+            else if(state.step == 5) endQuiz();
+            else if(state.step == 6) startTrollBox(); 
+            else if(state.step == 6 && state.giftClicks > 0) revealPrank();
+            else if(state.step < 8) calculateGifts();
+            else if(state.step == 8) afterParty();
+            else if(state.step == 9) startLetter();
+        }
+
+    </script>
+</body>
+</html>
